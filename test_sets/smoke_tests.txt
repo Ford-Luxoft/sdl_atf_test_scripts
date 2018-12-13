@@ -43,6 +43,7 @@
 ./test_scripts/Smoke/API/043_UnsubscribeButton_Non_Media_PositiveCase_SUCCESS.lua
 ./test_scripts/Smoke/API/044_AlertManeuver_Non_Media_PositiveCase_SUCCESS.lua
 ./test_scripts/Smoke/API/045_PerformAudioPassThru_Non_Media_PositiveCase_SUCCESS.lua
+./test_scripts/Smoke/API/046_OnSeekMediaClockTimer_PositiveCase_SUCCESS.lua
 ./test_scripts/Smoke/HeartBeat/001_HeartBeat_App_does_not_send_HB_and_does_not_respond.lua
 ./test_scripts/Smoke/HeartBeat/002_HeartBeat_App_does_not_send_HB_but_respond.lua
 ./test_scripts/Smoke/HeartBeat/003_HeartBeat_App_send_HB.lua
