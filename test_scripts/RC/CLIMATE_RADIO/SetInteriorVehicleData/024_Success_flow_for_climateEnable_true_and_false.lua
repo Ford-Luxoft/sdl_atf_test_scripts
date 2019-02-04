@@ -2,16 +2,21 @@
 -- Proposal: https://github.com/smartdevicelink/sdl_evolution/blob/master/proposals/0213-rc-radio-climate-parameter-update.md
 -- Description:
 -- Preconditions:
--- 1) SDL got RC.GetCapabilities("availableHdChannelsAvailable" = true) for RADIO module parameter from HMI
+-- 1) SDL got RC.GetCapabilities("climateEnableAvailable" = true) for CLIMATE module parameter from HMI
 -- In case:
--- 1) Mobile app sends SetInteriorVehicleData with parameter ("hdChannels" = 7) to SDL
+-- 1) Mobile app sends SetInteriorVehicleData with parameter ("climateEnable" = false) to SDL
+-- 2) HMI sends response RC.SetInteriorVehicleData ("climateEnable" = false)
 -- SDL must:
--- 1) send RC.SetInteriorVehicleData request ("hdChannel" = 7) to HMI
--- 2) HMI send response RC.SetInteriorVehicleData ("hdChannel" = 7, success = true, resultCode = "SUCCESS")
--- 3) sends SetInteriorVehicleData response with ("hdChannel" = 7, success = true, resultCode = "SUCCESS") to Mobile
+-- 1) sends RC.SetInteriorVehicleData (CLIMATE ("climateEnable" = false)) to HMI
+-- 2) send SetInteriorVehicleData  with ("resultCode" = SUCCESS) to Mobile
+-- In case:
+-- 1) Mobile app sends SetInteriorVehicleData  request parameter ("climateEnable" = true) to SDL
+-- 2) HMI sends RC.SetInteriorVehicleData response ("climateEnable" = true)
+-- SDL must:
+-- 1) sends RC.SetInteriorVehicleData request (CLIMATE ("climateEnable" = true)) to HMI
+-- 2) sends SetInteriorVehicleData response with ("resultCode" = SUCCESS) to Mobile
 ---------------------------------------------------------------------------------------------------
-
---[[ Requiredcontaining incorrect  Shared libraries ]]
+--[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
 local commonRC = require('test_scripts/RC/commonRC')
 
@@ -19,10 +24,10 @@ local commonRC = require('test_scripts/RC/commonRC')
 runner.testSettings.isSelfIncluded = false
 
 --[[ Local Variables ]]
-local mType = "RADIO"
+local mType = "CLIMATE"
 local paramValues = {
-  0,
-  7
+  false,
+  true
 }
 
 --[[ Local Functions ]]
@@ -30,8 +35,8 @@ local function requestSuccessful(pValue)
   function commonRC.getModuleControlData()
     return commonRC.actualInteriorDataStateOnHMI[mType]
   end
-  commonRC.actualInteriorDataStateOnHMI[mType].radioControlData = {
-    hdChannel = pValue
+  commonRC.actualInteriorDataStateOnHMI[mType].climateControlData = {
+    climateEnable = pValue
   }
   commonRC.rpcAllowed(mType, 1, "SetInteriorVehicleData")
 end
@@ -45,7 +50,7 @@ runner.Step("Activate App", commonRC.activateApp)
 
 runner.Title("Test")
 for _, v in pairs(paramValues) do
-  runner.Step("SetInteriorVehicleData hdChannel " .. tostring(v), requestSuccessful, { v })
+  runner.Step("SetInteriorVehicleData climateEnable " .. tostring(v), requestSuccessful, { v })
 end
 
 runner.Title("Postconditions")
