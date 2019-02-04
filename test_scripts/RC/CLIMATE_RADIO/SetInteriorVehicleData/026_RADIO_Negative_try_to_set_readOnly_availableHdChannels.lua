@@ -6,47 +6,38 @@
 -- In case:
 -- 1) Mobile app sends SetInteriorVehicleData with parameter ("hdChannels" = 7) to SDL
 -- SDL must:
--- 1) send RC.SetInteriorVehicleData request ("hdChannel" = 7) to HMI
--- 2) HMI send response RC.SetInteriorVehicleData ("hdChannel" = 7, success = true, resultCode = "SUCCESS")
--- 3) sends SetInteriorVehicleData response with ("hdChannel" = 7, success = true, resultCode = "SUCCESS") to Mobile
+-- 1) send SetInteriorVehicleData response with (availableHdChannels = { 1, 2, 3 }) to Mobile
 ---------------------------------------------------------------------------------------------------
 
 --[[ Requiredcontaining incorrect  Shared libraries ]]
 local runner = require('user_modules/script_runner')
 local commonRC = require('test_scripts/RC/commonRC')
+local hmi_values = require("user_modules/hmi_values")
 
 --[[ Test Configuration ]]
 runner.testSettings.isSelfIncluded = false
 
 --[[ Local Variables ]]
-local mType = "RADIO"
-local paramValues = {
-  0,
-  7
-}
+local hmiVal = hmi_values.getDefaultHMITable()
+hmiVal.RC.GetCapabilities.params.remoteControlCapability.radioControlCapabilities[1].availableHdChannelsAvailable = true
 
 --[[ Local Functions ]]
-local function requestSuccessful(pValue)
-  function commonRC.getModuleControlData()
-    return commonRC.actualInteriorDataStateOnHMI[mType]
-  end
-  commonRC.actualInteriorDataStateOnHMI[mType].radioControlData = {
-    hdChannel = pValue
+function commonRC.getSettableModuleControlData()
+  return  { moduleType = "RADIO",
+    radioControlData = { availableHdChannels = { 1, 2, 3 }}
   }
-  commonRC.rpcAllowed(mType, 1, "SetInteriorVehicleData")
 end
 
 --[[ Scenario ]]
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonRC.preconditions)
-runner.Step("Start SDL, HMI, connect Mobile, start Session", commonRC.start)
+runner.Step("Start SDL, HMI, connect Mobile, start Session", commonRC.start, { hmiVal })
 runner.Step("RAI", commonRC.registerAppWOPTU)
 runner.Step("Activate App", commonRC.activateApp)
 
 runner.Title("Test")
-for _, v in pairs(paramValues) do
-  runner.Step("SetInteriorVehicleData hdChannel " .. tostring(v), requestSuccessful, { v })
-end
+runner.Step("SetInteriorVehicleData availableHdChannel", commonRC.rpcDenied,
+  { "RADIO", 1, "SetInteriorVehicleData", "READ_ONLY" })
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", commonRC.postconditions)
